@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import skimage.transform
 import argparse
-from scipy.misc import imread, imresize
+from skimage.io import imread
+from skimage.transform import resize as imresize
 from PIL import Image
 from constants import width_image, height_image
 from utils import *
@@ -75,12 +76,16 @@ def structure_image_beam_search(encoder_out, decoder, word_map, beam_size=3):
     complete_seqs_scores = list()
     complete_seqs_hiddens = list()
 
-    # start decoding
+    print("start decoding")
+
     step = 1
     h, c = decoder.init_hidden_state(encoder_out)
 
+    print("end decoding")
+
     # s is a number less than or equal to k, because sequences are removed from this process once they hit <end>
     while True:
+        
         embeddings = decoder.embedding(
             k_prev_words).squeeze(1)  # (s, embed_dim)
 
@@ -107,24 +112,34 @@ def structure_image_beam_search(encoder_out, decoder, word_map, beam_size=3):
         # Convert unrolled indices to actual indices of scores
         prev_word_inds = top_k_words // vocab_size  # (s)
         next_word_inds = top_k_words % vocab_size  # (s)
+        # print(next_word_inds)
 
         # Add new words to sequences, alphas, and hidden_state
         seqs = torch.cat(
             [seqs[prev_word_inds], next_word_inds.unsqueeze(1)], dim=1)  # (s, step+1)
 
+        # print(next_word_inds)
+
         seqs_alpha = torch.cat([seqs_alpha[prev_word_inds], alpha[prev_word_inds].unsqueeze(1)],
                                dim=1)  # (s, step+1, enc_image_size, enc_image_size)
 
+        # print(next_word_inds)
+
+
         if step == 1:
+            # print(next_word_inds)
+
             seqs_hidden_states = h.unsqueeze(1)
         else:
+            # print(next_word_inds)
+
             seqs_hidden_states = torch.cat(
                 [seqs_hidden_states[prev_word_inds], h[prev_word_inds].unsqueeze(1)], dim=1)  # (s, step+1, decoder_structure_dim)
             # Which sequences are incomplete (didn't reach <end>)?
         incomplete_inds = [ind for ind, next_word in enumerate(next_word_inds) if
                            next_word != word_map['<end>']]
-        complete_inds = list(
-            set(range(len(next_word_inds))) - set(incomplete_inds))
+        complete_inds = list(set(range(len(next_word_inds))) - (set(incomplete_inds)))
+
 
         # Set aside complete sequences
         if len(complete_inds) > 0:
@@ -135,6 +150,7 @@ def structure_image_beam_search(encoder_out, decoder, word_map, beam_size=3):
                 seqs_hidden_states[complete_inds].tolist())
         k -= len(complete_inds)  # reduce beam length accordingly
 
+        print(k)
         if k == 0:
             break
         seqs = seqs[incomplete_inds]

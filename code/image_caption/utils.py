@@ -3,7 +3,8 @@ import numpy as np
 import h5py
 import json
 import torch
-from scipy.misc import imread, imresize
+from skimage.io import imread
+from skimage.transform import resize as imresize
 from tqdm import tqdm
 from collections import Counter
 from random import seed, choice, sample
@@ -12,11 +13,21 @@ from bs4 import BeautifulSoup as bs
 from html import escape
 from constants import width_image, height_image
 
+# DATA_DIR = '/home/dev.narayanan/pubtabep/PUB_TAB_EXP/pubtabnet'
+# DATA_DIR = '/home/dev.narayanan/pubtabep/onek_dataset'
+DATA_DIR = r'C:\Users\sande\OneDrive\Desktop\res+gpt\table-recognition\code\image_caption\dataset'
+
+# OUTPUT_DIR = '/home/dev.narayanan/pubtabep/PUB_TAB_EXP/output'
+OUTPUT_DIR = r'C:\Users\sande\OneDrive\Desktop\res+gpt\table-recognition\code\image_caption\output'
+
+METADATA_PATH = r'C:\Users\sande\OneDrive\Desktop\res+gpt\table-recognition\code\image_caption\dataset\examples\PubTabNet_Examples.jsonl'
+# METADATA_PATH =  "PubTabNet_Examples.jsonl"
+
 def check_longest_cell(cells):
     length_cells = [len(cell["tokens"]) for cell in cells]
     return max(length_cells)
 
-def create_input_files(image_folder="pubtabnet", output_folder="output",
+def create_input_files(image_folder=DATA_DIR, output_folder=OUTPUT_DIR,
                        max_len_token_structure=300,
                        max_len_token_cell=100
                        ):
@@ -33,7 +44,7 @@ def create_input_files(image_folder="pubtabnet", output_folder="output",
 
     # Read Karpathy JSON
     print("create_input .....")
-    with open(os.path.join(image_folder, "PubTabNet_2.0.0.jsonl"), 'r') as reader:
+    with open(os.path.join(image_folder, METADATA_PATH), 'r') as reader:
         imgs = list(reader)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -143,7 +154,7 @@ def create_input_files(image_folder="pubtabnet", output_folder="output",
                     img = img[:, :, np.newaxis]
                     img = np.concatenate([img, img, img], axis=2)
                 img = imresize(
-                    img, (width_image, height_image), interp="cubic")
+                    img, (width_image, height_image))
                 img = img.transpose(2, 0, 1)
                 # Save image to HDF5 file
                 images[i] = img

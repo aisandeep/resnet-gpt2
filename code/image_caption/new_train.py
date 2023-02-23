@@ -7,7 +7,7 @@ import torch.utils.data
 import torchvision.transforms as transforms
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
-from models import Encoder, DecoderStuctureWithAttention, DecoderCellPerImageWithAttention
+from new_model import Encoder, DecoderStuctureWithAttention, DecoderCellPerImageWithAttention
 from dataset import *
 from utils import *
 from nltk.translate.bleu_score import corpus_bleu
@@ -48,8 +48,8 @@ fine_tune_encoder = True  # fine-tune encoder?
 checkpoint = None  # path to checkpoint, None if none
 hyper_loss = 0.5
 word_map_structure_file = os.path.join(
-    data_folder, "WORDMAP_STRUCTURE.json")
-word_map_cell_file = os.path.join(data_folder, "WORDMAP_CELL.json")
+    data_folder1, "WORDMAP_STRUCTURE.json")
+word_map_cell_file = os.path.join(data_folder1, "WORDMAP_CELL.json")
 teds = TEDS(n_jobs=4)
 
 with open(word_map_structure_file, "r") as j:
